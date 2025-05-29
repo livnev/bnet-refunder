@@ -2,6 +2,7 @@
 
 ### TODOs
 
+- add events to contract
 - tests
 - offchain part
 - frontend

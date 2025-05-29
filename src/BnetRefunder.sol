@@ -23,14 +23,14 @@
 
 pragma solidity ^0.8.13;
 
-import {MerkleProof} from './MerkleProof.sol';
+import {MerkleProof} from "./MerkleProof.sol";
 
 contract BnetRefunder is MerkleProof {
     address public owner;
-    mapping (uint256 => bytes32) public roots;
-    mapping (uint256 => mapping(uint256 => uint256)) public claimedBitMap;
+    mapping(uint256 => bytes32) public roots;
+    mapping(uint256 => mapping(uint256 => uint256)) public claimedBitMap;
 
-    modifier onlyOwner {
+    modifier onlyOwner() {
         require(msg.sender == owner, "not owner");
         _;
     }

@@ -11,6 +11,5 @@ contract BnetRefunderTest is Test {
         refunder = new BnetRefunder();
     }
 
-    function test_basic() public {
-    }
+    function test_basic() public {}
 }

@@ -58,7 +58,7 @@ contract BnetRefunder is MerkleProof {
         uint256 claimedBitIndex = index % 256;
         uint256 claimedWord = claimedBitMap[epoch][claimedWordIndex];
         uint256 mask = (1 << claimedBitIndex);
-        require(claimedWord & mask != mask, "already claimed");
+        require(claimedWord & mask == 0, "already claimed");
 
         // mark leaf as claimed
         claimedBitMap[epoch][claimedWordIndex] = claimedWord & mask;

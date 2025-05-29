@@ -61,7 +61,7 @@ contract BnetRefunder is MerkleProof {
         require(claimedWord & mask == 0, "already claimed");
 
         // mark leaf as claimed
-        claimedBitMap[epoch][claimedWordIndex] = claimedWord & mask;
+        claimedBitMap[epoch][claimedWordIndex] = claimedWord | mask;
 
         // verify proof
         bytes32 node = keccak256(abi.encodePacked(index, account, amount));

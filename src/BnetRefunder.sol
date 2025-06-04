@@ -64,8 +64,8 @@ contract BnetRefunder is MerkleProof {
         claimedBitMap[epoch][claimedWordIndex] = claimedWord | mask;
 
         // verify proof
-        bytes32 node = keccak256(abi.encodePacked(index, account, amount));
-        require(verifyProof(merkleProof, roots[epoch], node), "invalid proof");
+        bytes32 leaf = keccak256(abi.encodePacked(index, account, amount));
+        require(verifyProof(merkleProof, roots[epoch], leaf), "invalid proof");
 
         // pay claim
         account.transfer(amount);

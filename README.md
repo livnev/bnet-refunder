@@ -3,8 +3,11 @@
 ### TODOs
 
 - add events to contract
-- tests
+- more test coverage
+  - amend previous epoch
+  - ???
 - offchain part
+  - potentially can use `ProofMaker.makeProof()` in a script
 - frontend
 
 ### Usage

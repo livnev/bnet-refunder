@@ -8,19 +8,19 @@ import {MerkleProof} from "../src/MerkleProof.sol";
 contract ProofMaker is MerkleProof {
     bytes32[] proof_stack;
 
-    function makeLeaves(
-        address[] calldata accounts,
-        uint256[] calldata amounts
-    ) public pure returns (bytes32[] memory leaves) {
+    function makeLeaves(address[] calldata accounts, uint256[] calldata amounts)
+        public
+        pure
+        returns (bytes32[] memory leaves)
+    {
         require(accounts.length == amounts.length);
         leaves = new bytes32[](accounts.length);
         for (uint256 i = 0; i < accounts.length; i++) {
             leaves[i] = keccak256(abi.encodePacked(i, accounts[i], amounts[i]));
         }
     }
-    function nextTreeLevel(
-        bytes32[] memory leaves
-    ) public pure returns (bytes32[] memory hashes) {
+
+    function nextTreeLevel(bytes32[] memory leaves) public pure returns (bytes32[] memory hashes) {
         require(leaves.length > 1);
         hashes = new bytes32[]((leaves.length + 1) / 2);
         for (uint256 i = 0; i < hashes.length - 1; i++) {
@@ -30,32 +30,28 @@ contract ProofMaker is MerkleProof {
         if (leaves.length % 2 == 0) {
             // even indices hash with right neighbour
             hashes[hashes.length - 1] = commutativeKeccak256(leaves[leaves.length - 2], leaves[leaves.length - 1]);
-        }
-        else {
+        } else {
             // right-pad with 0 for odd length leaves
             hashes[hashes.length - 1] = commutativeKeccak256(leaves[leaves.length - 1], bytes32(0));
         }
     }
-    function makeProof(
-        address[] calldata accounts,
-        uint256[] calldata amounts,
-        uint256 account_i
-    ) external returns (bytes32 root, bytes32[] memory proof) {
+
+    function makeProof(address[] calldata accounts, uint256[] calldata amounts, uint256 account_i)
+        external
+        returns (bytes32 root, bytes32[] memory proof)
+    {
         // single-use contract because we use an in-storage stack to build proof
         require(proof_stack.length == 0);
         bytes32[] memory next = makeLeaves(accounts, amounts);
-        while(next.length > 1) {
+        while (next.length > 1) {
             if (account_i % 2 == 1) {
                 // odd indices hash with left neighbour
                 proof_stack.push(next[account_i - 1]);
-
-            }
-            else {
+            } else {
                 if (account_i != next.length - 1) {
                     // even indices hash with right neighbour
                     proof_stack.push(next[account_i + 1]);
-                }
-                else {
+                } else {
                     // right-pad with 0 for odd length leaves
                     proof_stack.push(bytes32(0));
                 }
@@ -77,15 +73,9 @@ contract Usr {
         refunder = refunder_;
     }
 
-    receive() external payable {
-    }
+    receive() external payable {}
 
-    function claim(
-        uint256 epoch,
-        uint256 index,
-        uint256 amount,
-        bytes32[] calldata merkleProof
-    ) external {
+    function claim(uint256 epoch, uint256 index, uint256 amount, bytes32[] calldata merkleProof) external {
         refunder.claim(epoch, index, payable(address(this)), amount, merkleProof);
     }
 }
@@ -123,19 +113,19 @@ contract BnetRefunderTest is Test {
     }
 
     function test_basic_claims() public {
-        (,bytes32[] memory aliProof) = (new ProofMaker()).makeProof(accounts, amounts, 0);
+        (, bytes32[] memory aliProof) = (new ProofMaker()).makeProof(accounts, amounts, 0);
 
         assertEq(ali.balance, 0);
         Usr(ali).claim(0, 0, 1 ether, aliProof);
         assertEq(ali.balance, 1 ether);
 
-        (,bytes32[] memory bobProof) = (new ProofMaker()).makeProof(accounts, amounts, 1);
+        (, bytes32[] memory bobProof) = (new ProofMaker()).makeProof(accounts, amounts, 1);
 
         assertEq(bob.balance, 0);
         Usr(bob).claim(0, 1, 2 ether, bobProof);
         assertEq(bob.balance, 2 ether);
 
-        (,bytes32[] memory catProof) = (new ProofMaker()).makeProof(accounts, amounts, 2);
+        (, bytes32[] memory catProof) = (new ProofMaker()).makeProof(accounts, amounts, 2);
 
         assertEq(cat.balance, 0);
         Usr(cat).claim(0, 2, 3 ether, catProof);
@@ -143,7 +133,7 @@ contract BnetRefunderTest is Test {
     }
 
     function testRevert_no_claim_twice() public {
-        (,bytes32[] memory bobProof) = (new ProofMaker()).makeProof(accounts, amounts, 1);
+        (, bytes32[] memory bobProof) = (new ProofMaker()).makeProof(accounts, amounts, 1);
 
         Usr(bob).claim(0, 1, 2 ether, bobProof);
         vm.expectRevert();
@@ -151,7 +141,7 @@ contract BnetRefunderTest is Test {
     }
 
     function testRevert_no_claim_amount_greater() public {
-        (,bytes32[] memory bobProof) = (new ProofMaker()).makeProof(accounts, amounts, 1);
+        (, bytes32[] memory bobProof) = (new ProofMaker()).makeProof(accounts, amounts, 1);
 
         vm.expectRevert();
         Usr(bob).claim(0, 1, 3 ether, bobProof);

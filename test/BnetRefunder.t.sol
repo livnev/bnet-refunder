@@ -132,6 +132,20 @@ contract BnetRefunderTest is Test {
         assertEq(cat.balance, 3 ether);
     }
 
+    function test_claim_on_behalf() public {
+        (, bytes32[] memory aliProof) = (new ProofMaker()).makeProof(accounts, amounts, 0);
+
+        assertEq(ali.balance, 0);
+        refunder.claim(0, 0, ali, 1 ether, aliProof);
+        assertEq(ali.balance, 1 ether);
+    }
+
+    function testRevert_no_publish_from_non_owner() public {
+        vm.expectRevert();
+        vm.prank(address(0));
+        refunder.publish{value: 0 ether}(1, root);
+    }
+
     function testRevert_no_claim_twice() public {
         (, bytes32[] memory bobProof) = (new ProofMaker()).makeProof(accounts, amounts, 1);
 

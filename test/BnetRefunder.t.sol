@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {BnetRefunder} from "../src/BnetRefunder.sol";
 import {MerkleProof} from "../src/MerkleProof.sol";
-import "forge-std/console2.sol";
 
 contract ProofMaker is MerkleProof {
     bytes32[] proof_stack;

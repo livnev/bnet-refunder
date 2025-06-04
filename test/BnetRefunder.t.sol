@@ -7,7 +7,7 @@ import {MerkleProof} from "../src/MerkleProof.sol";
 import "forge-std/console2.sol";
 
 contract ProofMaker is MerkleProof {
-    bytes32[] proof_acc;
+    bytes32[] proof_stack;
 
     function makeLeaves(
         address[] calldata accounts,
@@ -42,23 +42,23 @@ contract ProofMaker is MerkleProof {
         uint256[] calldata amounts,
         uint256 account_i
     ) external returns (bytes32 root, bytes32[] memory proof) {
-        // single-use contract because we use storage as a stack
-        require(proof_acc.length == 0);
+        // single-use contract because we use an in-storage stack to build proof
+        require(proof_stack.length == 0);
         bytes32[] memory next = makeLeaves(accounts, amounts);
         while(next.length > 1) {
             if (account_i % 2 == 1) {
                 // odd indices hash with left neighbour
-                proof_acc.push(next[account_i - 1]);
+                proof_stack.push(next[account_i - 1]);
 
             }
             else {
                 if (account_i != next.length - 1) {
                     // even indices hash with right neighbour
-                    proof_acc.push(next[account_i + 1]);
+                    proof_stack.push(next[account_i + 1]);
                 }
                 else {
                     // right-pad with 0 for odd length leaves
-                    proof_acc.push(bytes32(0));
+                    proof_stack.push(bytes32(0));
                 }
             }
             // index in next level of tree
@@ -66,7 +66,7 @@ contract ProofMaker is MerkleProof {
             next = nextTreeLevel(next);
         }
         root = next[0];
-        proof = proof_acc;
+        proof = proof_stack;
     }
 }
 

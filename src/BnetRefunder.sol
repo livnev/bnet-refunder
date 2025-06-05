@@ -70,4 +70,40 @@ contract BnetRefunder is MerkleProof {
         // pay claim
         account.transfer(amount);
     }
+
+    // this is concept art
+    // TODO refactor to remove duplication
+    function claim(
+        uint256[] calldata epochs,
+        uint256[] calldata indexes,
+        address payable account,
+        uint256[] calldata amounts,
+        bytes32[][] calldata merkleProofs
+    ) external {
+        uint256 total = 0;
+        for (uint256 i = 0; i < epochs.length; i++) {
+            uint256 epoch = epochs[i];
+            uint256 index = indexes[i];
+            uint256 amount = amounts[i];
+
+            // check leaf wasn't claimed
+            uint256 claimedWordIndex = index / 256;
+            uint256 claimedBitIndex = index % 256;
+            uint256 claimedWord = claimedBitMap[epoch][claimedWordIndex];
+            uint256 mask = (1 << claimedBitIndex);
+            require(claimedWord & mask == 0, "already claimed");
+
+            // mark leaf as claimed
+            claimedBitMap[epoch][claimedWordIndex] = claimedWord | mask;
+
+            // verify proof
+            bytes32 leaf = keccak256(abi.encodePacked(index, account, amount));
+            require(verifyProof(merkleProofs[i], roots[epoch], leaf), "invalid proof");
+
+            total += amount;
+        }
+
+        // pay claim
+        account.transfer(total);
+    }
 }

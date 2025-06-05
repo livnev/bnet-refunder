@@ -31,6 +31,8 @@ contract BnetRefunder is MerkleProof {
     mapping(uint256 => mapping(uint256 => uint256)) public claimedBitMap;
     uint256 epoch;
 
+    event Claim(uint256 epoch_, uint256 index, uint256 amount) anonymous;
+
     modifier onlyOwner() {
         require(msg.sender == owner, "not owner");
         _;
@@ -72,5 +74,7 @@ contract BnetRefunder is MerkleProof {
 
         // pay claim
         account.transfer(amount);
+
+        emit Claim(epoch_, index, amount);
     }
 }

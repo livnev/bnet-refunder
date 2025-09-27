@@ -116,28 +116,28 @@ contract BnetRefunderTest is Test {
         (, bytes32[] memory aliProof) = (new ProofMaker()).makeProof(accounts, amounts, 0);
 
         assertEq(ali.balance, 0);
-        Usr(ali).claim(0, 0, 1 ether, aliProof);
-        assertEq(ali.balance, 1 ether);
+        Usr(ali).claim(0, 0, amounts[0], aliProof);
+        assertEq(ali.balance, amounts[0]);
 
         (, bytes32[] memory bobProof) = (new ProofMaker()).makeProof(accounts, amounts, 1);
 
         assertEq(bob.balance, 0);
-        Usr(bob).claim(0, 1, 2 ether, bobProof);
-        assertEq(bob.balance, 2 ether);
+        Usr(bob).claim(0, 1, amounts[1], bobProof);
+        assertEq(bob.balance, amounts[1]);
 
         (, bytes32[] memory catProof) = (new ProofMaker()).makeProof(accounts, amounts, 2);
 
         assertEq(cat.balance, 0);
-        Usr(cat).claim(0, 2, 3 ether, catProof);
-        assertEq(cat.balance, 3 ether);
+        Usr(cat).claim(0, 2, amounts[2], catProof);
+        assertEq(cat.balance, amounts[2]);
     }
 
     function test_claim_on_behalf() public {
         (, bytes32[] memory aliProof) = (new ProofMaker()).makeProof(accounts, amounts, 0);
 
         assertEq(ali.balance, 0);
-        refunder.claim(0, 0, ali, 1 ether, aliProof);
-        assertEq(ali.balance, 1 ether);
+        refunder.claim(0, 0, ali, amounts[0], aliProof);
+        assertEq(ali.balance, amounts[0]);
     }
 
     function testRevert_no_publish_from_non_owner() public {
@@ -149,9 +149,9 @@ contract BnetRefunderTest is Test {
     function testRevert_no_claim_twice() public {
         (, bytes32[] memory bobProof) = (new ProofMaker()).makeProof(accounts, amounts, 1);
 
-        Usr(bob).claim(0, 1, 2 ether, bobProof);
+        Usr(bob).claim(0, 1, amounts[1], bobProof);
         vm.expectRevert();
-        Usr(bob).claim(0, 1, 2 ether, bobProof);
+        Usr(bob).claim(0, 1, amounts[1], bobProof);
     }
 
     function testRevert_no_claim_amount_greater() public {

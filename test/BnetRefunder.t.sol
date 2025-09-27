@@ -132,6 +132,40 @@ contract BnetRefunderTest is Test {
         assertEq(cat.balance, amounts[2]);
     }
 
+    function test_claims_incremental_update() public {
+        (, bytes32[] memory aliProof) = (new ProofMaker()).makeProof(accounts, amounts, 0);
+
+        assertEq(ali.balance, 0);
+        Usr(ali).claim(0, 0, amounts[0], aliProof);
+        assertEq(ali.balance, amounts[0]);
+
+        // adding a new leaf
+        accounts.push(cat);
+        amounts.push(1 ether);
+
+        // calculate root using ali's account (arbitrary)
+        (root,) = (new ProofMaker()).makeProof(accounts, amounts, 0);
+        refunder.publish{value: 1 ether}(0, root);
+
+        (, bytes32[] memory bobProof) = (new ProofMaker()).makeProof(accounts, amounts, 1);
+
+        assertEq(bob.balance, 0);
+        Usr(bob).claim(0, 1, amounts[1], bobProof);
+        assertEq(bob.balance, amounts[1]);
+
+        (, bytes32[] memory catProof) = (new ProofMaker()).makeProof(accounts, amounts, 2);
+
+        assertEq(cat.balance, 0);
+        Usr(cat).claim(0, 2, amounts[2], catProof);
+        assertEq(cat.balance, amounts[2]);
+
+        (, bytes32[] memory catProof2) = (new ProofMaker()).makeProof(accounts, amounts, 3);
+
+        assertEq(cat.balance, amounts[2]);
+        Usr(cat).claim(0, 3, amounts[3], catProof2);
+        assertEq(cat.balance, amounts[2] + amounts[3]);
+    }
+
     function test_claim_on_behalf() public {
         (, bytes32[] memory aliProof) = (new ProofMaker()).makeProof(accounts, amounts, 0);
 

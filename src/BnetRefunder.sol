@@ -29,6 +29,9 @@ contract BnetRefunder is MerkleProof {
     address public owner;
     mapping(uint256 => bytes32) public roots;
     mapping(uint256 => mapping(uint256 => uint256)) public claimedBitMap;
+    uint256 latest;
+
+    event Claim(uint256 epoch, uint256 index, uint256 amount) anonymous;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "not owner");
@@ -42,7 +45,9 @@ contract BnetRefunder is MerkleProof {
     function publish(uint256 epoch, bytes32 root) external payable onlyOwner {
         // desire invariant msg.value = sum(leaf), but this is not checked here
         // if violated, race condition can occur
-        // roots can be updated, but you should only add leaves
+        // roots can be updated, but only for latest epoch
+        require(epoch >= latest, "invalid epoch");
+        if (epoch != latest) latest = epoch;
         roots[epoch] = root;
     }
 
@@ -69,5 +74,7 @@ contract BnetRefunder is MerkleProof {
 
         // pay claim
         account.transfer(amount);
+
+        emit Claim(epoch, index, amount);
     }
 }

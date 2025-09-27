@@ -28,7 +28,10 @@ import {MerkleProof} from "./MerkleProof.sol";
 contract BnetRefunder is MerkleProof {
     address public owner;
     mapping(uint256 => bytes32) public roots;
-    mapping(uint256 => mapping(uint256 => uint256)) public claimedBitMap;
+    mapping(uint256 => mapping(address => uint256)) public claimed;
+    uint256 latest;
+
+    event Claim(uint256 epoch, uint256 index, uint256 amount) anonymous;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "not owner");
@@ -42,7 +45,9 @@ contract BnetRefunder is MerkleProof {
     function publish(uint256 epoch, bytes32 root) external payable onlyOwner {
         // desire invariant msg.value = sum(leaf), but this is not checked here
         // if violated, race condition can occur
-        // roots can be updated, but you should only add leaves
+        // roots can be updated, but only for latest epoch
+        require(epoch >= latest, "invalid epoch");
+        if (epoch != latest) latest = epoch;
         roots[epoch] = root;
     }
 
@@ -53,21 +58,20 @@ contract BnetRefunder is MerkleProof {
         uint256 amount,
         bytes32[] calldata merkleProof
     ) external {
-        // check leaf wasn't claimed
-        uint256 claimedWordIndex = index / 256;
-        uint256 claimedBitIndex = index % 256;
-        uint256 claimedWord = claimedBitMap[epoch][claimedWordIndex];
-        uint256 mask = (1 << claimedBitIndex);
-        require(claimedWord & mask == 0, "already claimed");
+        // check leaf wasn't claimed for ux
+        uint256 remaining = amount - claimed[epoch][account];
+        require(remaining > 0, "already claimed");
 
-        // mark leaf as claimed
-        claimedBitMap[epoch][claimedWordIndex] = claimedWord | mask;
+        // increment claimed amount for account
+        claimed[epoch][account] = amount;
 
         // verify proof
         bytes32 leaf = keccak256(abi.encodePacked(index, account, amount));
         require(verifyProof(merkleProof, roots[epoch], leaf), "invalid proof");
 
         // pay claim
-        account.transfer(amount);
+        account.transfer(remaining);
+
+        emit Claim(epoch, index, amount);
     }
 }

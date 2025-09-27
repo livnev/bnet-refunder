@@ -139,13 +139,14 @@ contract BnetRefunderTest is Test {
         Usr(ali).claim(0, 0, amounts[0], aliProof);
         assertEq(ali.balance, amounts[0]);
 
-        // adding a new leaf
-        accounts.push(cat);
-        amounts.push(1 ether);
+        // adding to a claimed leaf
+        amounts[0] += 1 ether;
+        // adding to an unclaimed leaf
+        amounts[2] += 1 ether;
 
         // calculate root using ali's account (arbitrary)
         (root,) = (new ProofMaker()).makeProof(accounts, amounts, 0);
-        refunder.publish{value: 1 ether}(0, root);
+        refunder.publish{value: 2 ether}(0, root);
 
         (, bytes32[] memory bobProof) = (new ProofMaker()).makeProof(accounts, amounts, 1);
 
@@ -159,11 +160,11 @@ contract BnetRefunderTest is Test {
         Usr(cat).claim(0, 2, amounts[2], catProof);
         assertEq(cat.balance, amounts[2]);
 
-        (, bytes32[] memory catProof2) = (new ProofMaker()).makeProof(accounts, amounts, 3);
+        (, bytes32[] memory aliProof2) = (new ProofMaker()).makeProof(accounts, amounts, 0);
 
-        assertEq(cat.balance, amounts[2]);
-        Usr(cat).claim(0, 3, amounts[3], catProof2);
-        assertEq(cat.balance, amounts[2] + amounts[3]);
+        assertEq(ali.balance, 1 ether);
+        Usr(ali).claim(0, 0, amounts[0], aliProof2);
+        assertEq(ali.balance, amounts[0]);
     }
 
     function test_claim_on_behalf() public {
